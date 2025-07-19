@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, signInLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -38,7 +37,6 @@ const Login = () => {
     
     if (!validateForm()) return;
 
-    setIsLoading(true);
     setErrors({});
     
     try {
@@ -63,19 +61,17 @@ const Login = () => {
       }
     } catch (error: any) {
       setErrors({ submit: 'Login failed. Please try again.' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-  };
+  }, [errors]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-orange-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -188,10 +184,10 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={signInLoading}
               className="w-full btn-primary flex items-center justify-center space-x-2"
             >
-              {isLoading ? (
+              {signInLoading ? (
                 <>
                   <div className="loading-spinner w-4 h-4"></div>
                   <span>Signing in...</span>

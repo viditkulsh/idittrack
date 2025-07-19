@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, 
   X, 
@@ -11,7 +11,11 @@ import {
   Upload,
   User,
   LogOut,
-  Package
+  Package,
+  Settings,
+  ChevronDown,
+  UserCircle,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -27,23 +31,52 @@ type AuthLink = NavLink & {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { user, profile, signOut, signOutLoading, isAdmin } = useAuth();
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Products', href: '/products', icon: Package },
-    { name: 'Orders', href: '/orders', icon: ShoppingCart },
-    { name: 'Upload', href: '/upload', icon: Upload },
+    ...(user ? [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { name: 'Products', href: '/products', icon: Package },
+      { name: 'Orders', href: '/orders', icon: ShoppingCart },
+      { name: 'Upload', href: '/upload', icon: Upload },
+      ...(isAdmin() ? [{ name: 'Admin Panel', href: '/admin', icon: Crown }] : [])
+    ] : [])
   ];
 
-  const authLinks: AuthLink[] = user ? [
-    { name: 'Logout', href: '#', icon: LogOut, onClick: signOut },
-  ] : [
+  const authLinks: AuthLink[] = user ? [] : [
     { name: 'Login', href: '/login', icon: LogIn },
     { name: 'Register', href: '/register', icon: UserPlus },
   ];
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    setIsProfileOpen(false);
+    
+    // Provide immediate feedback by navigating first
+    navigate('/');
+    
+    // Then handle the actual signout in the background
+    signOut().catch(error => {
+      console.error('Error during logout:', error);
+      // Even if logout fails, user is already redirected to home
+    });
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -86,38 +119,103 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Auth Links - Desktop */}
+          {/* Auth Links & Profile - Desktop */}
           <div className="hidden md:flex items-center space-x-2">
-            {authLinks.map((item) => {
-              const Icon = item.icon;
-              if (item.onClick) {
+            {!user ? (
+              // Show login/register for unauthenticated users
+              authLinks.map((item) => {
+                const Icon = item.icon;
                 return (
-                  <button
+                  <Link
                     key={item.name}
-                    onClick={item.onClick}
-                    className="nav-link flex items-center space-x-1"
+                    to={item.href}
+                    className={`nav-link flex items-center space-x-1 ${
+                      isActive(item.href) ? 'nav-link-active' : ''
+                    }`}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
-                  </button>
+                  </Link>
                 );
-              }
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`nav-link flex items-center space-x-1 ${
-                    isActive(item.href) ? 'nav-link-active' : ''
-                  }`}
+              })
+            ) : (
+              // Show profile dropdown for authenticated users
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
                 >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-            {user && (
-              <div className="ml-3 p-2 bg-primary-100 rounded-full">
-                <User className="h-5 w-5 text-primary-600" />
+                  <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="hidden lg:block text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      {profile?.first_name && profile?.last_name 
+                        ? `${profile.first_name} ${profile.last_name}`
+                        : user.email?.split('@')[0] || 'User'}
+                    </p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slide-up">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">
+                        {profile?.first_name && profile?.last_name 
+                          ? `${profile.first_name} ${profile.last_name}`
+                          : user.email?.split('@')[0] || 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                    
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          navigate('/profile');
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        <UserCircle className="h-4 w-4 mr-3" />
+                        View Profile
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          navigate('/profile/edit');
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        <Settings className="h-4 w-4 mr-3" />
+                        Edit Profile
+                      </button>
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      <button
+                        onClick={handleSignOut}
+                        disabled={signOutLoading}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 disabled:opacity-50"
+                      >
+                        {signOutLoading ? (
+                          <>
+                            <div className="w-4 h-4 mr-3 border-2 border-red-300 border-t-red-600 rounded-full animate-spin"></div>
+                            Signing out...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="h-4 w-4 mr-3" />
+                            Logout
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -158,38 +256,83 @@ const Navbar = () => {
                 </Link>
               );
             })}
+            
+            {/* Mobile Auth Section */}
             <div className="border-t border-gray-200 pt-2">
-              {authLinks.map((item) => {
-                const Icon = item.icon;
-                if (item.onClick) {
+              {!user ? (
+                // Login/Register for unauthenticated users
+                authLinks.map((item) => {
+                  const Icon = item.icon;
                   return (
-                    <button
+                    <Link
                       key={item.name}
-                      onClick={() => {
-                        item.onClick?.();
-                        setIsOpen(false);
-                      }}
-                      className="nav-link flex items-center space-x-2 w-full text-left"
+                      to={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`nav-link flex items-center space-x-2 w-full ${
+                        isActive(item.href) ? 'nav-link-active' : ''
+                      }`}
                     >
                       <Icon className="h-4 w-4" />
                       <span>{item.name}</span>
-                    </button>
+                    </Link>
                   );
-                }
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`nav-link flex items-center space-x-2 w-full ${
-                      isActive(item.href) ? 'nav-link-active' : ''
-                    }`}
+                })
+              ) : (
+                // Profile options for authenticated users
+                <>
+                  <div className="px-3 py-2 border-b border-gray-100 mb-2">
+                    <p className="text-sm font-medium text-gray-900">
+                      {profile?.first_name && profile?.last_name 
+                        ? `${profile.first_name} ${profile.last_name}`
+                        : user.email?.split('@')[0] || 'User'}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/profile');
+                    }}
+                    className="nav-link flex items-center space-x-2 w-full text-left"
                   >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
+                    <UserCircle className="h-4 w-4" />
+                    <span>View Profile</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/profile/edit');
+                    }}
+                    className="nav-link flex items-center space-x-2 w-full text-left"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Edit Profile</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleSignOut();
+                    }}
+                    disabled={signOutLoading}
+                    className="nav-link flex items-center space-x-2 w-full text-left text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {signOutLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin"></div>
+                        <span>Signing out...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

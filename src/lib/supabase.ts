@@ -7,7 +7,24 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'x-client-info': 'idittrack-web'
+    }
+  },
+  // Add realtime config to prevent hanging
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+})
 
 // Database types for TypeScript
 export type Database = {

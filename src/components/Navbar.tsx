@@ -161,6 +161,21 @@ const Navbar = () => {
             <div className="border-t border-gray-200 pt-2">
               {authLinks.map((item) => {
                 const Icon = item.icon;
+                if (item.onClick) {
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => {
+                        item.onClick?.();
+                        setIsOpen(false);
+                      }}
+                      className="nav-link flex items-center space-x-2 w-full text-left"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </button>
+                  );
+                }
                 return (
                   <Link
                     key={item.name}

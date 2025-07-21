@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Plus, Search, Filter, Edit, Trash2, Eye, AlertCircle } from 'lucide-react';
+import { Package, Plus, Search, Filter, Edit, Trash2, AlertCircle } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useDatabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,7 +15,14 @@ interface Product {
   weight: number;
   status: string;
   categories?: { name: string };
-  inventory?: Array<{ quantity: number; location_id: string; locations?: { name: string } }>;
+  inventory?: Array<{ 
+    quantity: number; 
+    reserved_quantity: number;
+    reorder_point: number;
+    max_stock: number;
+    location_id: string; 
+    locations?: { name: string } 
+  }>;
 }
 
 const Products = () => {
@@ -35,7 +42,11 @@ const Products = () => {
     price: '',
     cost: '',
     weight: '',
-    status: 'active'
+    status: 'active',
+    // Inventory fields
+    quantity: '',
+    reorder_point: '',
+    max_stock: ''
   });
 
   const filteredProducts = products.filter((product: Product) => {
@@ -54,7 +65,11 @@ const Products = () => {
       price: '',
       cost: '',
       weight: '',
-      status: 'active'
+      status: 'active',
+      // Reset inventory fields
+      quantity: '',
+      reorder_point: '',
+      max_stock: ''
     });
   };
 
@@ -65,6 +80,7 @@ const Products = () => {
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
+    const inventory = product.inventory?.[0]; // Get first inventory record
     setFormData({
       sku: product.sku,
       name: product.name,
@@ -73,7 +89,11 @@ const Products = () => {
       price: product.price?.toString() || '',
       cost: product.cost?.toString() || '',
       weight: product.weight?.toString() || '',
-      status: product.status
+      status: product.status,
+      // Add inventory data
+      quantity: inventory?.quantity?.toString() || '',
+      reorder_point: inventory?.reorder_point?.toString() || '',
+      max_stock: inventory?.max_stock?.toString() || ''
     });
     setShowEditModal(true);
   };
@@ -224,12 +244,19 @@ const Products = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Stock:</span>
-                    <span className={`font-semibold ${
-                      getTotalStock(product) > 10 ? 'text-green-600' : 
-                      getTotalStock(product) > 0 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {getTotalStock(product)} units
-                    </span>
+                    <div className="text-right">
+                      <span className={`font-semibold ${
+                        getTotalStock(product) > 10 ? 'text-green-600' : 
+                        getTotalStock(product) > 0 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {getTotalStock(product)} units
+                      </span>
+                      {product.inventory?.[0]?.reorder_point && getTotalStock(product) <= product.inventory[0].reorder_point && (
+                        <div className="text-xs text-red-500 mt-1">
+                          Below reorder point ({product.inventory[0].reorder_point})
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -346,6 +373,56 @@ const Products = () => {
                     value={formData.weight}
                     onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                   />
+                </div>
+
+                {/* Inventory Management Section */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Inventory Management</h4>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Stock Quantity <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                        placeholder="0"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Reorder Point</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={formData.reorder_point}
+                        onChange={(e) => setFormData({ ...formData, reorder_point: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Stock</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={formData.max_stock}
+                        onChange={(e) => setFormData({ ...formData, max_stock: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 mt-2">
+                    <p>• Stock Quantity: Current available units</p>
+                    <p>• Reorder Point: Alert when stock falls below this level</p>
+                    <p>• Max Stock: Maximum inventory level (optional)</p>
+                  </div>
                 </div>
                 
                 <div>

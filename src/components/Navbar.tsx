@@ -38,7 +38,8 @@ const Navbar = () => {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Home },
+    // Only show Home for non-authenticated users
+    ...(user ? [] : [{ name: 'Home', href: '/', icon: Home }]),
     ...(user ? [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Products', href: '/products', icon: Package },

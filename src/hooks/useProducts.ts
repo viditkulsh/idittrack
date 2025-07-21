@@ -22,6 +22,7 @@ export const useProducts = () => {
             quantity,
             reserved_quantity,
             reorder_point,
+            max_stock,
             location_id,
             locations (name)
           )
@@ -40,16 +41,37 @@ export const useProducts = () => {
 
   const addProduct = async (productData: any) => {
     try {
-      const { data, error } = await supabase
+      // Separate product data from inventory data
+      const { quantity, reorder_point, max_stock, ...productFields } = productData;
+      
+      // Create product first
+      const { data: product, error: productError } = await supabase
         .from('products')
-        .insert([productData])
+        .insert([productFields])
         .select()
         .single()
 
-      if (error) throw error
+      if (productError) throw productError
+      
+      // Create inventory record if quantity is provided
+      if (quantity !== undefined && quantity !== '') {
+        const inventoryData = {
+          product_id: product.id,
+          quantity: parseInt(quantity) || 0,
+          reserved_quantity: 0,
+          reorder_point: parseInt(reorder_point) || 0,
+          max_stock: max_stock ? parseInt(max_stock) : null
+        };
+        
+        const { error: inventoryError } = await supabase
+          .from('inventory')
+          .insert([inventoryData])
+        
+        if (inventoryError) throw inventoryError
+      }
       
       await fetchProducts() // Refresh the list
-      return { data, error: null }
+      return { data: product, error: null }
     } catch (err: any) {
       return { data: null, error: err.message }
     }
@@ -57,17 +79,54 @@ export const useProducts = () => {
 
   const updateProduct = async (id: string, productData: any) => {
     try {
-      const { data, error } = await supabase
+      // Separate product data from inventory data
+      const { quantity, reorder_point, max_stock, ...productFields } = productData;
+      
+      // Update product
+      const { data: product, error: productError } = await supabase
         .from('products')
-        .update(productData)
+        .update(productFields)
         .eq('id', id)
         .select()
         .single()
 
-      if (error) throw error
+      if (productError) throw productError
+      
+      // Update or create inventory record
+      if (quantity !== undefined && quantity !== '') {
+        const inventoryData = {
+          quantity: parseInt(quantity) || 0,
+          reorder_point: parseInt(reorder_point) || 0,
+          max_stock: max_stock ? parseInt(max_stock) : null
+        };
+        
+        // Check if inventory record exists
+        const { data: existingInventory } = await supabase
+          .from('inventory')
+          .select('id')
+          .eq('product_id', id)
+          .single()
+        
+        if (existingInventory) {
+          // Update existing inventory
+          const { error: inventoryError } = await supabase
+            .from('inventory')
+            .update(inventoryData)
+            .eq('product_id', id)
+          
+          if (inventoryError) throw inventoryError
+        } else {
+          // Create new inventory record
+          const { error: inventoryError } = await supabase
+            .from('inventory')
+            .insert([{ ...inventoryData, product_id: id, reserved_quantity: 0 }])
+          
+          if (inventoryError) throw inventoryError
+        }
+      }
       
       await fetchProducts() // Refresh the list
-      return { data, error: null }
+      return { data: product, error: null }
     } catch (err: any) {
       return { data: null, error: err.message }
     }

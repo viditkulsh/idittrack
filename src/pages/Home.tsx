@@ -1,5 +1,4 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { 
   Package, 
   ShoppingCart, 
@@ -11,8 +10,16 @@ import {
   Star,
   Users
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Home = () => {
+  const { user } = useAuth();
+  
+  // Redirect authenticated users to dashboard
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const features = [
     {
       icon: Package,

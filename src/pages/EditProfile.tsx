@@ -12,7 +12,7 @@ const EditProfile = () => {
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
-    company: profile?.company || ''
+    company: profile?.company_name || '' // Fixed: use company_name from database
   });
 
   // Update form data when profile changes
@@ -21,7 +21,7 @@ const EditProfile = () => {
       setFormData({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
-        company: profile.company || ''
+        company: profile.company_name || '' // Fixed: use company_name from database
       });
     }
   }, [profile]);
@@ -61,11 +61,8 @@ const EditProfile = () => {
     }
 
     try {
-      console.log('Submitting profile data:', formData);
       const { data, error } = await updateProfile(formData);
-      
-      console.log('Update response:', { data, error });
-      
+
       if (!error && data) {
         setSuccessMessage('Profile updated successfully!');
         setTimeout(() => {

@@ -8,14 +8,14 @@ interface Profile {
   email: string;
   first_name?: string;
   last_name?: string;
-  company?: string;
+  company_name?: string; // Fixed: use company_name to match database schema
   role: 'admin' | 'manager' | 'user';
   created_at: string;
   updated_at: string;
 }
 
 const AdminPanel: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { user, profile, loading: authLoading, isAdmin } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,24 +24,33 @@ const AdminPanel: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAdmin()) {
+    // Only fetch profiles when we have a user and profile loaded and they are admin
+    if (!authLoading && user && profile && isAdmin()) {
       fetchProfiles();
+    } else if (!authLoading) {
+      setLoading(false);
     }
-  }, [isAdmin]);
+  }, [user, profile, authLoading, isAdmin]);
 
   const fetchProfiles = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        throw error;
+      }
+
       setProfiles(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching profiles:', error);
-      setError('Failed to fetch user profiles');
+      setError(`Failed to fetch user profiles: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -52,7 +61,7 @@ const AdminPanel: React.FC = () => {
     setEditData({
       first_name: profile.first_name,
       last_name: profile.last_name,
-      company: profile.company,
+      company_name: profile.company_name,
       role: profile.role
     });
   };
@@ -106,23 +115,50 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading admin panel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is authenticated and has profile
+  if (!user || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600">Please log in to access the admin panel.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check admin privileges
   if (!isAdmin()) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You need admin privileges to access this page.</p>
+          <p className="text-sm text-gray-500 mt-2">Current role: {profile.role}</p>
         </div>
       </div>
     );
   }
 
+  // Show loading while fetching profiles
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin panel...</p>
+          <p className="text-gray-600">Loading user profiles...</p>
         </div>
       </div>
     );
@@ -221,13 +257,13 @@ const AdminPanel: React.FC = () => {
                       {editingId === profile.id ? (
                         <input
                           type="text"
-                          value={editData.company || ''}
-                          onChange={(e) => setEditData({ ...editData, company: e.target.value })}
+                          value={editData.company_name || ''}
+                          onChange={(e) => setEditData({ ...editData, company_name: e.target.value })}
                           className="input-field text-sm"
                           placeholder="Company"
                         />
                       ) : (
-                        <span className="text-gray-900">{profile.company || 'Not specified'}</span>
+                          <span className="text-gray-900">{profile.company_name || 'Not specified'}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

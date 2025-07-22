@@ -7,7 +7,7 @@ interface Profile {
   email: string
   first_name?: string
   last_name?: string
-  company?: string
+  company_name?: string // Fixed: use company_name to match database schema
   role: 'admin' | 'manager' | 'user'
   created_at: string
   updated_at: string
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Auth loading timeout - setting loading to false');
         setLoading(false);
       }
-    }, 3000); // 3 second timeout
+    }, 5000); // 5 second timeout
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,19 +73,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_, session) => {
         if (!isMounted) return; // Don't update state if component unmounted
         
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          // Only fetch profile if this is a sign-in event, not during app initialization
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            await fetchProfile(session.user.id)
-          } else {
-            setLoading(false)
-          }
+          // Always fetch profile when we have a user, regardless of event type
+          await fetchProfile(session.user.id)
         } else {
           // Clear profile immediately on sign out
           setProfile(null)
@@ -105,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Add a timeout to the profile fetch to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
       );
       
       const fetchPromise = supabase
@@ -117,9 +113,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
       if (error && error.code === 'PGRST116') {
-        // No profile found - this is normal for new users
-        console.log('No profile found for user - will be created when they edit profile');
-        setProfile(null);
+        // No profile found - create a basic profile for the user
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: userData.user.email || '',
+              first_name: userData.user.user_metadata?.first_name || 'User',
+              last_name: userData.user.user_metadata?.last_name || 'Name',
+              role: 'user',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            setProfile(null);
+          } else {
+            setProfile(newProfile);
+          }
+        } else {
+          setProfile(null);
+        }
       } else if (error) {
         console.error('Error fetching profile:', error.message)
         setProfile(null);
@@ -158,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // If signup is successful but user needs to confirm email
     if (result.data.user && !result.data.session) {
-      console.log('Please check your email to confirm your account')
+      // User needs to confirm email - this is expected behavior
     }
     
     return result
@@ -195,26 +214,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return { error: 'No user logged in' }
 
     try {
-      console.log('Updating profile for user:', user.id, 'with data:', data);
-      
       // First, try to update the existing profile
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
           first_name: data.first_name?.trim() || null,
           last_name: data.last_name?.trim() || null,
-          company: data.company?.trim() || null,
+          company_name: data.company?.trim() || null, // Fixed: use company_name instead of company
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
         .select()
         .single()
 
-      console.log('Update result:', { updatedProfile, updateError });
-
       if (updateError && updateError.code === 'PGRST116') {
         // Profile doesn't exist, create it
-        console.log('Profile not found, creating new one');
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert({
@@ -222,15 +236,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: user.email || '',
             first_name: data.first_name?.trim() || null,
             last_name: data.last_name?.trim() || null,
-            company: data.company?.trim() || null,
+            company_name: data.company?.trim() || null, // Fixed: use company_name instead of company
             role: 'user', // Default role for new profiles
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
           .select()
           .single()
-
-        console.log('Insert result:', { newProfile, insertError });
 
         if (!insertError) {
           setProfile(newProfile)

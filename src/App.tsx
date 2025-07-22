@@ -107,6 +107,4 @@ function App() {
       </div>
     </AuthProvider>
   );
-}
-
-export default App;
+} export default App;

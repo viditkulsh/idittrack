@@ -53,10 +53,10 @@ const Profile = () => {
                   </div>
                 )}
                 
-                {profile?.company && (
+                {profile?.company_name && (
                   <div className="flex items-center justify-center sm:justify-start space-x-2">
                     <Building className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-700">{profile.company}</span>
+                    <span className="text-gray-700">{profile.company_name}</span>
                   </div>
                 )}
               </div>
@@ -64,13 +64,13 @@ const Profile = () => {
           </div>
 
           {/* Additional Info */}
-          {profile && profile.company && (
+          {profile && profile.company_name && (
             <div className="mt-8 pt-8 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Company</label>
-                  <p className="mt-1 text-gray-900">{profile.company}</p>
+                  <p className="mt-1 text-gray-900">{profile.company_name}</p>
                 </div>
               </div>
             </div>

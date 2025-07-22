@@ -96,7 +96,7 @@ const Orders = () => {
         if (field === 'product_id' && value) {
           const selectedProduct = products.find((p: any) => p.id === value);
           if (selectedProduct) {
-            updatedItem.unit_price = selectedProduct.price || 0;
+            updatedItem.unit_price = selectedProduct.selling_price || 0;
           }
         }
         

@@ -23,14 +23,14 @@ export const useOrders = () => {
           *,
           order_items (
             *,
-            products (name, sku, price)
+            products (name, sku, selling_price)
           )
         `)
         .order('created_at', { ascending: false })
 
       // If user is not admin/manager, only show their orders
       if (profile?.role !== 'admin' && profile?.role !== 'manager') {
-        query = query.eq('user_id', user?.id)
+        query = query.eq('customer_id', user?.id)
       }
 
       const { data, error } = await query
@@ -51,7 +51,7 @@ export const useOrders = () => {
         .from('orders')
         .insert([{
           ...orderData,
-          user_id: user?.id,
+          customer_id: user?.id,
           order_number: `ORD-${Date.now()}`
         }])
         .select()

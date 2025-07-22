@@ -1,0 +1,24 @@
+# PRODUCT IMPORT TEMPLATE - IDITTRACK,,,,,,,,,,
+# IMPORTANT: Use EXACT category names as shown below,,,,,,,,,,
+#,,,,,,,,,,
+# CATEGORIES (case-sensitive, use exactly as written):,,,,,,,,,
+# - Electronics (for electronic devices and accessories),,,,,,,,,,
+# - Clothing (for apparel and fashion items),,,,,,,,,,
+# - Home & Garden (for home improvement and gardening),,,,,,,,,,
+# - Books (for books and publications),,,,,,,,,,
+#,,,,,,,,,,
+# INSTRUCTIONS:,,,,,,,,,,
+# 1. Fill in your product data starting from row 13,,,,,,,,,,
+# 2. Required fields: SKU, Product Name, Category, Selling Price, Cost Price,,,,,,
+SKU,Product Name,Category,Brand,Selling Price,Cost Price,Weight (kg),Description,Stock Quantity,Reorder Level,Status
+PROD-001,Sample Electronics Product,Electronics,TechBrand,299.99,199.99,1.5,High-quality electronic device with advanced features,100,20,active
+PROD-002,Premium Clothing Item,Clothing,FashionCorp,79.99,45,0.3,Comfortable and stylish clothing for everyday wear,50,10,active
+PROD-003,Home & Garden Tool,Home & Garden,HomeTools,24.99,15.5,0.8,Essential tool for home and garden maintenance,75,15,active
+PROD-004,Wireless Bluetooth Headphones,Electronics,SoundMax,89.99,55,0.4,Noise-cancelling headphones with long battery life,40,10,active
+PROD-005,Organic Cotton T-Shirt,Clothing,EcoWear,29.99,18,0.25,Soft and eco-friendly t-shirt made from 100% organic cotton,120,30,active
+PROD-006,Stainless Steel Garden Shears,Home & Garden,TrimPro,34.5,20,0.6,Durable shears for precise trimming and cutting,60,12,active
+PROD-007,Science Fiction Bestseller,Books,LitWorld,19.99,9.99,0.5,Gripping sci-fi novel with futuristic world-building,200,25,active
+PROD-008,USB-C Fast Charging Cable,Electronics,PowerLink,14.99,6.5,0.1,Durable and fast-charging USB-C cable for multiple devices,500,100,active
+PROD-009,Waterproof Hiking Jacket,Clothing,TrailGear,119.99,70,1.2,Weatherproof jacket for outdoor adventures,30,5,active
+PROD-010,Indoor Plant Care Kit,Home & Garden,GreenThumb,49.99,30,1,"Complete kit with spray, nutrients, and tools for plant care",90,20,active
+PROD-011,Classic Literature Collection,Books,EduRead,59.99,25,1.8,A beautifully bound collection of timeless literary classics,80,10,active

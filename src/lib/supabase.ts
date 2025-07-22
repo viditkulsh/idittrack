@@ -60,9 +60,9 @@ export type Database = {
           name: string
           description: string | null
           category_id: string | null
-          price: number | null
-          cost: number | null
-          weight: number | null
+          selling_price: number | null
+          cost_price: number | null
+          weight_kg: number | null
           dimensions: any | null
           metadata: any | null
           status: string
@@ -74,9 +74,9 @@ export type Database = {
           name: string
           description?: string | null
           category_id?: string | null
-          price?: number | null
-          cost?: number | null
-          weight?: number | null
+          selling_price?: number | null
+          cost_price?: number | null
+          weight_kg?: number | null
           dimensions?: any | null
           metadata?: any | null
           status?: string
@@ -85,9 +85,9 @@ export type Database = {
           name?: string
           description?: string | null
           category_id?: string | null
-          price?: number | null
-          cost?: number | null
-          weight?: number | null
+          selling_price?: number | null
+          cost_price?: number | null
+          weight_kg?: number | null
           dimensions?: any | null
           metadata?: any | null
           status?: string
@@ -117,7 +117,7 @@ export type Database = {
         Row: {
           id: string
           order_number: string
-          user_id: string | null
+          customer_id: string | null
           status: string
           order_type: string
           subtotal: number | null
@@ -132,7 +132,7 @@ export type Database = {
         }
         Insert: {
           order_number: string
-          user_id?: string | null
+          customer_id?: string | null
           status?: string
           order_type?: string
           subtotal?: number | null
@@ -184,8 +184,7 @@ export type Database = {
           location_id: string | null
           quantity: number
           reserved_quantity: number
-          reorder_point: number
-          max_stock: number | null
+          reorder_level: number
           last_counted_at: string | null
           updated_at: string
         }
@@ -194,15 +193,13 @@ export type Database = {
           location_id?: string | null
           quantity?: number
           reserved_quantity?: number
-          reorder_point?: number
-          max_stock?: number | null
+          reorder_level?: number
           last_counted_at?: string | null
         }
         Update: {
           quantity?: number
           reserved_quantity?: number
-          reorder_point?: number
-          max_stock?: number | null
+          reorder_level?: number
           last_counted_at?: string | null
         }
       }
@@ -229,6 +226,41 @@ export type Database = {
           address?: any | null
           contact_info?: any | null
           is_active?: boolean
+        }
+      }
+      file_uploads: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          size: number
+          status: string
+          url: string | null
+          uploaded_by: string
+          file_path: string | null
+          metadata: any
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          size: number
+          status?: string
+          url?: string | null
+          uploaded_by: string
+          file_path?: string | null
+          metadata?: any
+        }
+        Update: {
+          name?: string
+          type?: string
+          size?: number
+          status?: string
+          url?: string | null
+          file_path?: string | null
+          metadata?: any
         }
       }
     }

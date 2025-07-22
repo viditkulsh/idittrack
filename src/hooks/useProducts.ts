@@ -21,8 +21,7 @@ export const useProducts = () => {
           inventory (
             quantity,
             reserved_quantity,
-            reorder_point,
-            max_stock,
+            reorder_level,
             location_id,
             locations (name)
           )
@@ -42,7 +41,7 @@ export const useProducts = () => {
   const addProduct = async (productData: any) => {
     try {
       // Separate product data from inventory data
-      const { quantity, reorder_point, max_stock, ...productFields } = productData;
+      const { quantity, reorder_point, ...productFields } = productData;
       
       // Create product first
       const { data: product, error: productError } = await supabase
@@ -59,8 +58,7 @@ export const useProducts = () => {
           product_id: product.id,
           quantity: parseInt(quantity) || 0,
           reserved_quantity: 0,
-          reorder_point: parseInt(reorder_point) || 0,
-          max_stock: max_stock ? parseInt(max_stock) : null
+          reorder_level: parseInt(reorder_point) || 0
         };
         
         const { error: inventoryError } = await supabase
@@ -80,7 +78,7 @@ export const useProducts = () => {
   const updateProduct = async (id: string, productData: any) => {
     try {
       // Separate product data from inventory data
-      const { quantity, reorder_point, max_stock, ...productFields } = productData;
+      const { quantity, reorder_point, ...productFields } = productData;
       
       // Update product
       const { data: product, error: productError } = await supabase
@@ -96,8 +94,7 @@ export const useProducts = () => {
       if (quantity !== undefined && quantity !== '') {
         const inventoryData = {
           quantity: parseInt(quantity) || 0,
-          reorder_point: parseInt(reorder_point) || 0,
-          max_stock: max_stock ? parseInt(max_stock) : null
+          reorder_level: parseInt(reorder_point) || 0
         };
         
         // Check if inventory record exists

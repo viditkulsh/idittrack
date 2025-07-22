@@ -10,16 +10,15 @@ interface Product {
   name: string;
   description: string;
   category_id: string;
-  price: number;
-  cost: number;
-  weight: number;
+  selling_price: number;
+  cost_price: number;
+  weight_kg: number;
   status: string;
   categories?: { name: string };
   inventory?: Array<{ 
     quantity: number; 
     reserved_quantity: number;
-    reorder_point: number;
-    max_stock: number;
+    reorder_level: number;
     location_id: string; 
     locations?: { name: string } 
   }>;
@@ -45,8 +44,7 @@ const Products = () => {
     status: 'active',
     // Inventory fields
     quantity: '',
-    reorder_point: '',
-    max_stock: ''
+    reorder_point: ''
   });
 
   const filteredProducts = products.filter((product: Product) => {
@@ -68,8 +66,7 @@ const Products = () => {
       status: 'active',
       // Reset inventory fields
       quantity: '',
-      reorder_point: '',
-      max_stock: ''
+      reorder_point: ''
     });
   };
 
@@ -86,14 +83,13 @@ const Products = () => {
       name: product.name,
       description: product.description || '',
       category_id: product.category_id || '',
-      price: product.price?.toString() || '',
-      cost: product.cost?.toString() || '',
-      weight: product.weight?.toString() || '',
+      price: product.selling_price?.toString() || '',
+      cost: product.cost_price?.toString() || '',
+      weight: product.weight_kg?.toString() || '',
       status: product.status,
       // Add inventory data
       quantity: inventory?.quantity?.toString() || '',
-      reorder_point: inventory?.reorder_point?.toString() || '',
-      max_stock: inventory?.max_stock?.toString() || ''
+      reorder_point: inventory?.reorder_level?.toString() || ''
     });
     setShowEditModal(true);
   };
@@ -103,9 +99,9 @@ const Products = () => {
     
     const productData = {
       ...formData,
-      price: parseFloat(formData.price) || 0,
-      cost: parseFloat(formData.cost) || 0,
-      weight: parseFloat(formData.weight) || 0
+      selling_price: parseFloat(formData.price) || 0,
+      cost_price: parseFloat(formData.cost) || 0,
+      weight_kg: parseFloat(formData.weight) || 0
     };
 
     try {
@@ -240,7 +236,7 @@ const Products = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Price:</span>
-                    <span className="text-gray-900 font-semibold">₹{product.price}</span>
+                    <span className="text-gray-900 font-semibold">₹{product.selling_price}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Stock:</span>
@@ -251,9 +247,9 @@ const Products = () => {
                       }`}>
                         {getTotalStock(product)} units
                       </span>
-                      {product.inventory?.[0]?.reorder_point && getTotalStock(product) <= product.inventory[0].reorder_point && (
+                      {product.inventory?.[0]?.reorder_level && getTotalStock(product) <= product.inventory[0].reorder_level && (
                         <div className="text-xs text-red-500 mt-1">
-                          Below reorder point ({product.inventory[0].reorder_point})
+                          Below reorder point ({product.inventory[0].reorder_level})
                         </div>
                       )}
                     </div>
@@ -405,23 +401,11 @@ const Products = () => {
                         placeholder="0"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Stock</label>
-                      <input
-                        type="number"
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={formData.max_stock}
-                        onChange={(e) => setFormData({ ...formData, max_stock: e.target.value })}
-                        placeholder="0"
-                      />
-                    </div>
                   </div>
                   
                   <div className="text-xs text-gray-500 mt-2">
                     <p>• Stock Quantity: Current available units</p>
                     <p>• Reorder Point: Alert when stock falls below this level</p>
-                    <p>• Max Stock: Maximum inventory level (optional)</p>
                   </div>
                 </div>
                 

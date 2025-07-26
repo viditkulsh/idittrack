@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Calendar, Building } from 'lucide-react';
+import { User, Mail, Calendar, Building, Shield } from 'lucide-react';
 
 const Profile = () => {
   const { user, profile } = useAuth();
@@ -43,6 +43,18 @@ const Profile = () => {
                   <Mail className="h-4 w-4 text-gray-400" />
                   <span className="text-gray-700">{user.email}</span>
                 </div>
+
+                {profile?.role && (
+                  <div className="flex items-center justify-center sm:justify-start space-x-2">
+                    <Shield className="h-4 w-4 text-gray-400" />
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${profile.role === 'admin' ? 'bg-red-100 text-red-800' :
+                        profile.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                          'bg-green-100 text-green-800'
+                      }`}>
+                      {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+                    </span>
+                  </div>
+                )}
                 
                 {user.created_at && (
                   <div className="flex items-center justify-center sm:justify-start space-x-2">

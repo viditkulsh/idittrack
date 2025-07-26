@@ -253,6 +253,13 @@ const Dashboard = () => {
                 </Link>
               </PermissionGate>
 
+              <PermissionGate resource="inventory" action="read">
+                <Link to="/inventory" className="w-full btn-primary flex items-center justify-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>Manage Inventory</span>
+                </Link>
+              </PermissionGate>
+
               <PermissionGate resource="orders" action="create">
                 <Link to="/orders" className="w-full btn-secondary flex items-center justify-center space-x-2">
                   <ShoppingCart className="h-4 w-4" />

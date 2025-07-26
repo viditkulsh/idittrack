@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 import EmailConfirmation from './pages/EmailConfirmation';
 import AdminPanel from './pages/AdminPanel';
+import InventoryManagement from './pages/InventoryManagement';
 
 function App() {
   return (
@@ -59,6 +60,14 @@ function App() {
                   <Products />
                 </ProtectedRoute>
               } 
+            />
+            <Route 
+              path="/inventory"
+              element={
+                <ProtectedRoute>
+                  <InventoryManagement />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/orders" 

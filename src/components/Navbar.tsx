@@ -15,7 +15,8 @@ import {
   Settings,
   ChevronDown,
   UserCircle,
-  Crown
+  Crown,
+  Warehouse
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -36,7 +37,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut, signOutLoading } = useAuth();
-  const { isManagerOrAdmin } = usePermissions();
+  const { isAdmin } = usePermissions();
   const profileRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
@@ -45,10 +46,11 @@ const Navbar = () => {
     ...(user ? [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Products', href: '/products', icon: Package },
+      { name: 'Inventory', href: '/inventory', icon: Warehouse },
       { name: 'Orders', href: '/orders', icon: ShoppingCart },
       { name: 'Upload', href: '/upload', icon: Upload },
-      // Admin Panel - visible for admins and managers only
-      ...(isManagerOrAdmin ? [{ name: 'Admin Panel', href: '/admin', icon: Crown }] : [])
+      // Admin Panel - visible for admins only
+      ...(isAdmin() ? [{ name: 'Admin Panel', href: '/admin', icon: Crown }] : [])
     ] : [])
   ];
 

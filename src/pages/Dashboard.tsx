@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { 
   Package, 
   ShoppingCart, 
-  TrendingUp, 
   AlertTriangle,
   DollarSign,
   BarChart3,
@@ -11,15 +10,29 @@ import {
   ArrowDown,
   Calendar,
   Filter,
-  Plus,
-  Upload
+  Upload,
+  Users,
+  Crown,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePermissions, useRoleAccess } from '../hooks/usePermissions';
+import { PermissionGate, AdminOnly, ManagerOrAdmin, SuperAdminOnly } from '../components/PermissionGate';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { user, profile } = useAuth();
+  const { user, profile, currentTenant } = useAuth();
+  const {
+    canReadInventory,
+    canReadOrders,
+    canReadProducts,
+    canManageUsers,
+    isAdmin,
+    isManager,
+    isSuperAdmin
+  } = usePermissions();
+  const { canViewAllOrders } = useRoleAccess();
 
   useEffect(() => {
     // Simulate loading
@@ -27,51 +40,93 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Empty state stats for new users
-  const stats = [
-    {
-      title: 'Total Products',
-      value: '0',
-      change: '--',
-      changeType: 'neutral',
-      icon: Package,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      title: 'Active Orders',
-      value: '0',
-      change: '--',
-      changeType: 'neutral',
-      icon: ShoppingCart,
-      color: 'text-primary-600',
-      bgColor: 'bg-primary-100'
-    },
-    {
-      title: 'Revenue',
-      value: '$0.00',
-      change: '--',
-      changeType: 'neutral',
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      title: 'Low Stock Items',
-      value: '0',
-      change: '--',
-      changeType: 'neutral',
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
+  // Role-based stats configuration
+  const getStatsForRole = () => {
+    const baseStats: Array<{
+      title: string;
+      value: string;
+      change: string;
+      changeType: 'increase' | 'decrease' | 'neutral';
+      icon: any;
+      color: string;
+      bgColor: string;
+    }> = [];
+
+    // Products stats - visible if user can read products
+    if (canReadProducts) {
+      baseStats.push({
+        title: 'Total Products',
+        value: '0',
+        change: '--',
+        changeType: 'neutral',
+        icon: Package,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100'
+      });
     }
-  ];
+
+    // Orders stats - visible if user can read orders
+    if (canReadOrders) {
+      baseStats.push({
+        title: canViewAllOrders ? 'All Orders' : 'My Orders',
+        value: '0',
+        change: '--',
+        changeType: 'neutral',
+        icon: ShoppingCart,
+        color: 'text-primary-600',
+        bgColor: 'bg-primary-100'
+      });
+    }
+
+    // Revenue stats - visible for admins and managers
+    if (isAdmin() || isManager()) {
+      baseStats.push({
+        title: 'Revenue',
+        value: '$0.00',
+        change: '--',
+        changeType: 'neutral',
+        icon: DollarSign,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100'
+      });
+    }
+
+    // Inventory alerts - visible if user can read inventory
+    if (canReadInventory) {
+      baseStats.push({
+        title: 'Low Stock Items',
+        value: '0',
+        change: '--',
+        changeType: 'neutral',
+        icon: AlertTriangle,
+        color: 'text-red-600',
+        bgColor: 'bg-red-100'
+      });
+    }
+
+    // Users stats - visible if user can manage users
+    if (canManageUsers) {
+      baseStats.push({
+        title: isSuperAdmin() ? 'Platform Users' : 'Team Members',
+        value: '0',
+        change: '--',
+        changeType: 'neutral',
+        icon: Users,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100'
+      });
+    }
+
+    return baseStats;
+  };
+
+  const stats = getStatsForRole();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="loading-spinner w-12 h-12 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -90,7 +145,23 @@ const Dashboard = () => {
                   ? `${profile.first_name} ${profile.last_name}`
                   : user?.email?.split('@')[0] || 'User'}!
               </h1>
-              <p className="text-gray-600">Here's an overview of your business.</p>
+              <div className="flex items-center space-x-4">
+                <p className="text-gray-600">Here's an overview of your business.</p>
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${profile?.role === 'admin' ? 'bg-red-100 text-red-800' :
+                      profile?.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                    }`}>
+                    {profile?.role === 'admin' && isSuperAdmin() ? 'Super Admin' :
+                      profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'User'}
+                  </span>
+                  {currentTenant && (
+                    <span className="text-sm text-gray-500">
+                      @ {currentTenant.tenant_name}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-3">
               <button className="btn-secondary flex items-center space-x-2">
@@ -173,64 +244,113 @@ const Dashboard = () => {
           {/* Quick Actions */}
           <div className="card p-6 animate-slide-up" style={{ animationDelay: '0.5s' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link to="/products" className="w-full btn-primary flex items-center justify-center space-x-2">
-                <Package className="h-4 w-4" />
-                <span>Add Products</span>
-              </Link>
-              <Link to="/orders" className="w-full btn-secondary flex items-center justify-center space-x-2">
-                <ShoppingCart className="h-4 w-4" />
-                <span>Create Order</span>
-              </Link>
+            <div className="grid grid-cols-1 gap-3">
+
+              <PermissionGate resource="products" action="create">
+                <Link to="/products" className="w-full btn-primary flex items-center justify-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>Add Products</span>
+                </Link>
+              </PermissionGate>
+
+              <PermissionGate resource="orders" action="create">
+                <Link to="/orders" className="w-full btn-secondary flex items-center justify-center space-x-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>Create Order</span>
+                </Link>
+              </PermissionGate>
+
               <Link to="/upload" className="w-full btn-secondary flex items-center justify-center space-x-2">
                 <Upload className="h-4 w-4" />
-                <span>Upload Data</span>
+                <span>Upload Files</span>
               </Link>
-              <button className="w-full btn-secondary flex items-center justify-center space-x-2">
-                <TrendingUp className="h-4 w-4" />
-                <span>View Reports</span>
-              </button>
+
+              <ManagerOrAdmin>
+                <Link to="/admin" className="w-full btn-outline flex items-center justify-center space-x-2">
+                  <Crown className="h-4 w-4" />
+                  <span>Admin Panel</span>
+                </Link>
+              </ManagerOrAdmin>
+
+              <PermissionGate resource="users" action="manage">
+                <Link to="/users" className="w-full btn-outline flex items-center justify-center space-x-2">
+                  <Users className="h-4 w-4" />
+                  <span>Manage Users</span>
+                </Link>
+              </PermissionGate>
+
+              <SuperAdminOnly>
+                <Link to="/system" className="w-full btn-outline flex items-center justify-center space-x-2">
+                  <Settings className="h-4 w-4" />
+                  <span>System Settings</span>
+                </Link>
+              </SuperAdminOnly>
+
             </div>
           </div>
         </div>
 
-        {/* Recent Orders and Quick Actions */}
+        {/* Role-specific sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Orders */}
-          <div className="card p-6 animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
-              <Link to="/orders" className="text-primary-600 hover:text-primary-500 text-sm font-medium">
-                View all
-              </Link>
+
+          {/* Admin/Manager Section */}
+          <ManagerOrAdmin>
+            <div className="card p-6 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                {isAdmin() ? 'Administrative Overview' : 'Management Dashboard'}
+              </h3>
+              <div className="space-y-4">
+                <PermissionGate resource="users" action="read">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Users className="h-5 w-5 text-blue-500" />
+                      <span className="font-medium">Team Management</span>
+                    </div>
+                    <Link to="/users" className="text-blue-600 hover:text-blue-800">
+                      View →
+                    </Link>
+                  </div>
+                </PermissionGate>
+
+                <PermissionGate resource="analytics" action="read">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <BarChart3 className="h-5 w-5 text-green-500" />
+                      <span className="font-medium">Analytics & Reports</span>
+                    </div>
+                    <Link to="/analytics" className="text-blue-600 hover:text-blue-800">
+                      View →
+                    </Link>
+                  </div>
+                </PermissionGate>
+
+                <AdminOnly>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Settings className="h-5 w-5 text-purple-500" />
+                      <span className="font-medium">System Configuration</span>
+                    </div>
+                    <Link to="/admin" className="text-blue-600 hover:text-blue-800">
+                      Configure →
+                    </Link>
+                  </div>
+                </AdminOnly>
+              </div>
             </div>
-            <div className="text-center py-12">
-              <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h4>
-              <p className="text-gray-600 mb-4">Your recent orders will appear here once customers start placing orders.</p>
-              <Link to="/orders" className="btn-primary inline-flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Create Order</span>
-              </Link>
+          </ManagerOrAdmin>
+
+          {/* Recent Activity */}
+          <div className="card p-6 animate-slide-up" style={{ animationDelay: '0.7s' }}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Activity</h3>
+            <div className="space-y-4">
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No recent activity</p>
+                <p className="text-sm text-gray-500">Activity will appear here as you use the system</p>
+              </div>
             </div>
           </div>
 
-          {/* Inventory Status */}
-          <div className="card p-6 animate-slide-up" style={{ animationDelay: '0.7s' }}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Inventory Status</h3>
-              <Package className="h-5 w-5 text-blue-500" />
-            </div>
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No products yet</h4>
-              <p className="text-gray-600 mb-4">Add your first products to start tracking inventory and manage your business.</p>
-              <Link to="/products" className="btn-primary inline-flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Add Products</span>
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
     </div>

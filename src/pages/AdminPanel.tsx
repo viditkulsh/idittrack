@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Users, Shield, Crown, User, Edit2, Mail, Building2, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import SessionMonitor from '../components/SessionMonitor';
 
 interface Profile {
   id: string;
@@ -177,7 +178,17 @@ const AdminPanel: React.FC = () => {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You need admin privileges to access this page.</p>
-          <p className="text-sm text-gray-500 mt-2">Current role: {profile.role}</p>
+          <p className="text-sm text-gray-500 mt-2">Current role: {profile?.role || 'Loading...'}</p>
+          {profile?.role && (
+            <div className="mt-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Refresh Page
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -200,13 +211,18 @@ const AdminPanel: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 animate-fade-in-up">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg shadow-lg">
-              <Crown className="h-8 w-8 text-white" />
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg shadow-lg">
+                <Crown className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
+                <p className="text-gray-600">Manage users and system configuration</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-gray-600">Manage users and system configuration</p>
+            <div className="flex items-center space-x-4">
+              <SessionMonitor onSessionExpired={() => window.location.reload()} />
             </div>
           </div>
         </div>

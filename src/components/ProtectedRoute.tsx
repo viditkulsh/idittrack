@@ -1,21 +1,30 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { AccessDenied } from './PermissionGate';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   requiredRole?: 'admin' | 'manager' | 'user';
   allowedRoles?: ('admin' | 'manager' | 'user')[];
+  requiredPermission?: { resource: string; action: string };
+  requiredPermissions?: { resource: string; action: string }[];
+  requireAll?: boolean; // For multiple permissions, require all or any
+  fallback?: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   requireAuth = true,
   requiredRole,
-  allowedRoles
+  allowedRoles,
+  requiredPermission,
+  requiredPermissions,
+  requireAll = false,
+  fallback
 }) => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, hasPermission, hasRole } = useAuth();
   const location = useLocation();
 
   // For public routes (login/register), don't wait for loading if user is already null
@@ -34,7 +43,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -49,29 +58,31 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Check role-based access if user is authenticated
   if (requireAuth && user && profile) {
     // If specific role is required
-    if (requiredRole && profile.role !== requiredRole) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-600">You don't have permission to access this page.</p>
-            <p className="text-sm text-gray-500 mt-2">Required role: {requiredRole}</p>
-          </div>
-        </div>
-      );
+    if (requiredRole && !hasRole(requiredRole)) {
+      return fallback || <AccessDenied message={`This page requires ${requiredRole} role.`} />;
     }
 
     // If allowed roles are specified
-    if (allowedRoles && !allowedRoles.includes(profile.role)) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-600">You don't have permission to access this page.</p>
-            <p className="text-sm text-gray-500 mt-2">Allowed roles: {allowedRoles.join(', ')}</p>
-          </div>
-        </div>
-      );
+    if (allowedRoles && !allowedRoles.some(role => hasRole(role))) {
+      return fallback || <AccessDenied message={`This page requires one of: ${allowedRoles.join(', ')} roles.`} />;
+    }
+
+    // Check single permission
+    if (requiredPermission && !hasPermission(requiredPermission.resource, requiredPermission.action)) {
+      return fallback || <AccessDenied message="You don't have the required permissions to access this page." />;
+    }
+
+    // Check multiple permissions
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      const hasRequiredPermissions = requireAll
+        ? requiredPermissions.every(perm => hasPermission(perm.resource, perm.action))
+        : requiredPermissions.some(perm => hasPermission(perm.resource, perm.action));
+
+      if (!hasRequiredPermissions) {
+        const permissionText = requireAll ? 'all of the following' : 'at least one of the following';
+        const permsList = requiredPermissions.map(p => `${p.action} ${p.resource}`).join(', ');
+        return fallback || <AccessDenied message={`You need ${permissionText} permissions: ${permsList}`} />;
+      }
     }
   }
 

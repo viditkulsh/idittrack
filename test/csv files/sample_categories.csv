@@ -1,0 +1,11 @@
+name,description,status,created_date
+Electronics,"Electronic devices and accessories",active,2025-01-01
+Furniture,"Office and home furniture items",active,2025-01-01
+Kitchenware,"Kitchen utensils and appliances",active,2025-01-01
+Clothing,"Apparel and fashion items",active,2025-01-01
+Health,"Health and wellness products",active,2025-01-01
+Sports,"Sports and fitness equipment",active,2025-01-01
+Home,"Home decor and comfort items",active,2025-01-01
+Books,"Educational and entertainment books",inactive,2025-01-01
+Toys,"Children's toys and games",active,2025-01-01
+Automotive,"Car accessories and parts",active,2025-01-01

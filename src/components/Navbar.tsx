@@ -18,6 +18,7 @@ import {
   Crown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
 
 type NavLink = {
   name: string;
@@ -34,7 +35,8 @@ const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut, signOutLoading, isAdmin } = useAuth();
+  const { user, profile, signOut, signOutLoading } = useAuth();
+  const { isManagerOrAdmin } = usePermissions();
   const profileRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
@@ -45,7 +47,8 @@ const Navbar = () => {
       { name: 'Products', href: '/products', icon: Package },
       { name: 'Orders', href: '/orders', icon: ShoppingCart },
       { name: 'Upload', href: '/upload', icon: Upload },
-      ...(isAdmin() ? [{ name: 'Admin Panel', href: '/admin', icon: Crown }] : [])
+      // Admin Panel - visible for admins and managers only
+      ...(isManagerOrAdmin ? [{ name: 'Admin Panel', href: '/admin', icon: Crown }] : [])
     ] : [])
   ];
 
@@ -162,7 +165,7 @@ const Navbar = () => {
 
                 {/* Profile Dropdown */}
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slide-up">
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slide-up">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-medium text-gray-900">
                         {profile?.first_name && profile?.last_name 
@@ -170,7 +173,15 @@ const Navbar = () => {
                           : user.email?.split('@')[0] || 'User'}
                       </p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                    </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${profile?.role === 'admin' ? 'bg-red-100 text-red-800' :
+                              profile?.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                                'bg-green-100 text-green-800'
+                            }`}>
+                            {profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'User'}
+                          </span>
+                        </div>
+                      </div>
                     
                     <div className="py-1">
                       <button

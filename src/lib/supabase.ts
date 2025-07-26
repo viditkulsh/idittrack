@@ -11,7 +11,11 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    // Ensure persistent storage for admin sessions
+    storage: window.localStorage,
+    storageKey: 'idittrack-auth-token',
+    flowType: 'pkce' // More secure auth flow
   },
   global: {
     headers: {
@@ -25,6 +29,111 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     }
   }
 })
+
+// Session management helpers for admin users
+export const checkSessionValidity = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Session check error:', error);
+      return { valid: false, error };
+    }
+
+    // Check if session is about to expire (within 5 minutes)
+    if (session) {
+      const expiresAt = new Date(session.expires_at! * 1000);
+      const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000);
+      const needsRefresh = expiresAt < fiveMinutesFromNow;
+
+      return {
+        valid: true,
+        session,
+        needsRefresh,
+        expiresAt,
+        timeUntilExpiry: expiresAt.getTime() - Date.now()
+      };
+    }
+
+    return { valid: false, error: 'No session found' };
+  } catch (error) {
+    console.error('Session validity check failed:', error);
+    return { valid: false, error };
+  }
+};
+
+export const refreshSessionIfNeeded = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error('Session refresh error:', error);
+      return { success: false, error };
+    }
+    console.log('Session refreshed successfully');
+    return { success: true, session };
+  } catch (error) {
+    console.error('Session refresh failed:', error);
+    return { success: false, error };
+  }
+};
+
+// RBAC Helper Functions
+export const getUserPermissions = async (userId?: string, tenantId?: string) => {
+  const { data, error } = await supabase.rpc('get_user_permissions', {
+    p_user_id: userId,
+    p_tenant_id: tenantId
+  })
+
+  if (error) {
+    console.error('Error getting user permissions:', error)
+    return []
+  }
+  return data || []
+}
+
+export const checkUserPermission = async (
+  userId: string,
+  resource: string,
+  action: string,
+  tenantId?: string
+) => {
+  const { data, error } = await supabase.rpc('user_has_permission', {
+    p_user_id: userId,
+    p_resource: resource,
+    p_action: action,
+    p_tenant_id: tenantId
+  })
+
+  if (error) {
+    console.error('Error checking user permission:', error)
+    return false
+  }
+  return data || false
+}
+
+export const getUserTenants = async (userId?: string) => {
+  const { data, error } = await supabase.rpc('get_user_tenants', {
+    p_user_id: userId
+  })
+
+  if (error) {
+    console.error('Error getting user tenants:', error)
+    return []
+  }
+  return data || []
+}
+
+export const getUserEffectiveRole = async (userId: string, tenantId?: string) => {
+  const { data, error } = await supabase.rpc('get_user_effective_role', {
+    p_user_id: userId,
+    p_tenant_id: tenantId
+  })
+
+  if (error) {
+    console.error('Error getting user effective role:', error)
+    return 'user'
+  }
+  return data || 'user'
+}
 
 // Database types for TypeScript
 export type Database = {

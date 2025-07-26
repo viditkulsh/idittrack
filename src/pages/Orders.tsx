@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Search, Filter, Eye, Truck, CheckCircle, X, AlertCi
 import { useOrders } from '../hooks/useOrders';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../contexts/AuthContext';
+import { PermissionGate } from '../components/PermissionGate';
 
 interface Order {
   id: string;
@@ -174,13 +175,15 @@ const Orders = () => {
           </h1>
           <p className="text-gray-600 mt-2">Track and manage your orders</p>
         </div>
-        <button
-          onClick={handleCreateOrder}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Create Order
-        </button>
+        <PermissionGate resource="orders" action="create">
+          <button
+            onClick={handleCreateOrder}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create Order
+          </button>
+        </PermissionGate>
       </div>
 
       {/* Filters */}
@@ -287,22 +290,26 @@ const Orders = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        {order.status === 'pending' && (
-                          <button
-                            onClick={() => handleStatusUpdate(order.id, 'processing')}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                        {order.status === 'processing' && (
-                          <button
-                            onClick={() => handleStatusUpdate(order.id, 'shipped')}
-                            className="text-purple-600 hover:text-purple-900"
-                          >
-                            <Truck className="h-4 w-4" />
-                          </button>
-                        )}
+                        <PermissionGate resource="orders" action="update">
+                          {order.status === 'pending' && (
+                            <button
+                              onClick={() => handleStatusUpdate(order.id, 'processing')}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </button>
+                          )}
+                        </PermissionGate>
+                        <PermissionGate resource="orders" action="update">
+                          {order.status === 'processing' && (
+                            <button
+                              onClick={() => handleStatusUpdate(order.id, 'shipped')}
+                              className="text-purple-600 hover:text-purple-900"
+                            >
+                              <Truck className="h-4 w-4" />
+                            </button>
+                          )}
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>

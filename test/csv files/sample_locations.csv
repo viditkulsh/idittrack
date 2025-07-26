@@ -1,0 +1,6 @@
+name,address,city,state,country,postal_code,is_default,warehouse_type
+Warehouse A,"1234 Industrial Blvd","Los Angeles",CA,USA,90210,true,main
+Warehouse B,"5678 Commerce Dr","Chicago",IL,USA,60601,false,secondary
+Store Front,"9012 Main Street","New York",NY,USA,10001,false,retail
+Distribution Center,"3456 Logistics Way","Atlanta",GA,USA,30303,false,distribution
+Pop-up Store,"7890 Shopping Mall","Miami",FL,USA,33101,false,temporary

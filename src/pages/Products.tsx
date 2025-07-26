@@ -3,6 +3,7 @@ import { Package, Plus, Search, Filter, Edit, Trash2, AlertCircle } from 'lucide
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useDatabase';
 import { useAuth } from '../contexts/AuthContext';
+import { PermissionGate } from '../components/PermissionGate';
 
 interface Product {
   id: string;
@@ -154,13 +155,15 @@ const Products = () => {
           </h1>
           <p className="text-gray-600 mt-2">Manage your product inventory</p>
         </div>
-        <button
-          onClick={handleAdd}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Product
-        </button>
+        <PermissionGate resource="products" action="create">
+          <button
+            onClick={handleAdd}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Product
+          </button>
+        </PermissionGate>
       </div>
 
       {/* Filters */}
@@ -257,20 +260,24 @@ const Products = () => {
                 </div>
                 
                 <div className="flex space-x-2 mt-4">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center"
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product)}
-                    className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </button>
+                  <PermissionGate resource="products" action="update">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate resource="products" action="delete">
+                    <button
+                      onClick={() => handleDelete(product)}
+                      className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </button>
+                  </PermissionGate>
                 </div>
               </div>
             </div>

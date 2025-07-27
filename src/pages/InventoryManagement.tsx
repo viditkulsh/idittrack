@@ -6,6 +6,7 @@ import {
   Edit, 
   Trash2, 
   AlertTriangle,
+  AlertCircle,
   TrendingUp,
   TrendingDown,
   ArrowUpDown,
@@ -17,7 +18,6 @@ import useInventoryManagement, { InventoryItem } from '../hooks/useInventoryMana
 import { useLocations } from '../hooks/useDatabase'
 import { useProducts } from '../hooks/useProducts'
 import { useAuth } from '../contexts/AuthContext'
-import { usePermissions } from '../hooks/usePermissions'
 import { PermissionGate, RoleGate } from '../components/PermissionGate'
 
 const InventoryManagement = () => {
@@ -152,8 +152,7 @@ const InventoryManagement = () => {
     const { error } = await adjustStock(
       selectedItem.id,
       parseInt(adjustForm.newQuantity),
-      adjustForm.reason,
-      adjustForm.movementType
+      adjustForm.reason
     )
 
     if (!error) {
@@ -955,18 +954,21 @@ const InventoryManagement = () => {
                         </td>
                         <td className="px-4 py-2">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            movement.movement_type === 'in' 
+                            movement.type === 'purchase' || movement.type === 'return'
                               ? 'bg-green-100 text-green-800'
-                              : movement.movement_type === 'out'
+                            : movement.type === 'sale' || movement.type === 'damage'
                                 ? 'bg-red-100 text-red-800'
-                                : movement.movement_type === 'transfer'
+                              : movement.type === 'transfer'
                                   ? 'bg-blue-100 text-blue-800'
+                                : movement.type === 'adjustment'
+                                  ? 'bg-yellow-100 text-yellow-800'
                                   : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {movement.movement_type === 'in' && <TrendingUp className="h-3 w-3 mr-1" />}
-                            {movement.movement_type === 'out' && <TrendingDown className="h-3 w-3 mr-1" />}
-                            {movement.movement_type === 'transfer' && <ArrowUpDown className="h-3 w-3 mr-1" />}
-                            {movement.movement_type.charAt(0).toUpperCase() + movement.movement_type.slice(1)}
+                            {(movement.type === 'purchase' || movement.type === 'return') && <TrendingUp className="h-3 w-3 mr-1" />}
+                            {(movement.type === 'sale' || movement.type === 'damage') && <TrendingDown className="h-3 w-3 mr-1" />}
+                            {movement.type === 'transfer' && <ArrowUpDown className="h-3 w-3 mr-1" />}
+                            {movement.type === 'adjustment' && <AlertCircle className="h-3 w-3 mr-1" />}
+                            {movement.type.charAt(0).toUpperCase() + movement.type.slice(1)}
                           </span>
                         </td>
                         <td className="px-4 py-2 text-sm text-gray-900">

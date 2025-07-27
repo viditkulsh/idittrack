@@ -28,7 +28,7 @@ export interface InventoryItem {
 export interface StockMovement {
   id: string
   inventory_id: string
-  movement_type: 'in' | 'out' | 'transfer' | 'adjustment'
+  type: 'adjustment' | 'sale' | 'purchase' | 'transfer' | 'return' | 'damage'
   quantity: number
   reference_type: string | null
   reference_id: string | null
@@ -181,7 +181,7 @@ export const useInventoryManagement = () => {
     inventoryId: string,
     newQuantity: number,
     reason: string,
-    movementType: 'in' | 'out' | 'adjustment' = 'adjustment'
+    type: 'adjustment' | 'sale' | 'purchase' | 'transfer' | 'return' | 'damage' = 'adjustment'
   ) => {
     try {
       // Get current inventory item
@@ -212,7 +212,7 @@ export const useInventoryManagement = () => {
         .from('inventory_movements')
         .insert([{
           inventory_id: inventoryId,
-          movement_type: movementType,
+          type: type,
           quantity: Math.abs(quantityDifference),
           reason: reason,
           reference_type: 'manual_adjustment',
@@ -301,16 +301,16 @@ export const useInventoryManagement = () => {
       const movements = [
         {
           inventory_id: fromInventoryId,
-          movement_type: 'out' as const,
-          quantity: quantity,
+          type: 'transfer' as const,
+          quantity: -quantity, // Negative for outgoing
           reason: `Transfer out: ${reason}`,
           reference_type: 'transfer',
           performed_by: userId
         },
         {
           inventory_id: destItem?.id || null,
-          movement_type: 'in' as const,
-          quantity: quantity,
+          type: 'transfer' as const,
+          quantity: quantity, // Positive for incoming
           reason: `Transfer in: ${reason}`,
           reference_type: 'transfer',
           performed_by: userId
@@ -362,8 +362,8 @@ export const useInventoryManagement = () => {
         .from('inventory_movements')
         .insert([{
           inventory_id: inventoryId,
-          movement_type: 'out',
-          quantity: quantity,
+          type: 'sale',
+          quantity: -quantity, // Negative for stock going out
           reason: 'Stock reserved for order',
           reference_type: 'order_reservation',
           reference_id: orderId,
@@ -407,8 +407,8 @@ export const useInventoryManagement = () => {
         .from('inventory_movements')
         .insert([{
           inventory_id: inventoryId,
-          movement_type: 'in',
-          quantity: quantity,
+          type: 'return',
+          quantity: quantity, // Positive for stock coming back
           reason: 'Reserved stock released',
           reference_type: 'order_release',
           reference_id: orderId,

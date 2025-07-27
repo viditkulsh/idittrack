@@ -352,6 +352,20 @@ export async function processOrdersCSV(csvContent: string, userId: string): Prom
         continue;
       }
 
+      // Validate and normalize status
+      const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+      let normalizedStatus = row.status?.trim().toLowerCase() || 'pending';
+
+      // Map 'completed' to 'delivered' for backward compatibility
+      if (normalizedStatus === 'completed') {
+        normalizedStatus = 'delivered';
+      }
+
+      if (!validStatuses.includes(normalizedStatus)) {
+        errors.push(`Row ${rowNum}: Invalid status "${row.status}". Valid values: ${validStatuses.join(', ')}`);
+        continue;
+      }
+
       const customerKey = `${row.customer_name.trim()}_${row.customer_email.trim()}`;
       if (!orderGroups.has(customerKey)) {
         orderGroups.set(customerKey, []);
@@ -365,7 +379,7 @@ export async function processOrdersCSV(csvContent: string, userId: string): Prom
         notes: row.notes?.trim() || null,
         customer_name: row.customer_name.trim(),
         customer_email: row.customer_email.trim(),
-        status: row.status?.trim().toLowerCase() || 'pending'
+        status: normalizedStatus
       });
     }
 
@@ -391,7 +405,7 @@ export async function processOrdersCSV(csvContent: string, userId: string): Prom
             subtotal: totalAmount,
             total_amount: totalAmount,
             notes: firstItem.notes,
-            source: 'csv_import',
+            source: 'email', // Use 'email' as valid source for CSV imports
             created_by: userId
           })
           .select()

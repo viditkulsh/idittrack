@@ -295,6 +295,7 @@ const Orders = () => {
                             <button
                               onClick={() => handleStatusUpdate(order.id, 'processing')}
                               className="text-green-600 hover:text-green-900"
+                              title="Mark as Processing"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </button>
@@ -305,8 +306,31 @@ const Orders = () => {
                             <button
                               onClick={() => handleStatusUpdate(order.id, 'shipped')}
                               className="text-purple-600 hover:text-purple-900"
+                              title="Mark as Shipped"
                             >
                               <Truck className="h-4 w-4" />
+                            </button>
+                          )}
+                        </PermissionGate>
+                        <PermissionGate resource="orders" action="update">
+                          {order.status === 'shipped' && (
+                            <button
+                              onClick={() => handleStatusUpdate(order.id, 'delivered')}
+                              className="text-green-600 hover:text-green-900"
+                              title="Mark as Delivered"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </button>
+                          )}
+                        </PermissionGate>
+                        <PermissionGate resource="orders" action="update">
+                          {(order.status === 'pending' || order.status === 'processing' || order.status === 'shipped') && (
+                            <button
+                              onClick={() => handleStatusUpdate(order.id, 'cancelled')}
+                              className="text-red-600 hover:text-red-900"
+                              title="Cancel Order"
+                            >
+                              <X className="h-4 w-4" />
                             </button>
                           )}
                         </PermissionGate>

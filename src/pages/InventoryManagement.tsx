@@ -18,7 +18,7 @@ import { useLocations } from '../hooks/useDatabase'
 import { useProducts } from '../hooks/useProducts'
 import { useAuth } from '../contexts/AuthContext'
 import { usePermissions } from '../hooks/usePermissions'
-import { PermissionGate } from '../components/PermissionGate'
+import { PermissionGate, RoleGate } from '../components/PermissionGate'
 
 const InventoryManagement = () => {
   const { user } = useAuth()
@@ -263,7 +263,7 @@ const InventoryManagement = () => {
           <p className="text-gray-600 mt-2">Manage your product inventory across all locations</p>
         </div>
         <div className="flex space-x-3">
-          <PermissionGate resource="inventory" action="create">
+          <RoleGate roles={['admin', 'manager']}>
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
@@ -271,7 +271,7 @@ const InventoryManagement = () => {
               <Plus className="h-5 w-5 mr-2" />
               Add Inventory
             </button>
-          </PermissionGate>
+          </RoleGate>
           <button
             onClick={() => setShowMovementsModal(true)}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center"

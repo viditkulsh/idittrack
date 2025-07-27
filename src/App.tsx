@@ -14,6 +14,7 @@ import EditProfile from './pages/EditProfile';
 import EmailConfirmation from './pages/EmailConfirmation';
 import AdminPanel from './pages/AdminPanel';
 import InventoryManagement from './pages/InventoryManagement';
+import CategoryManagement from './pages/CategoryManagement';
 
 function App() {
   return (
@@ -110,6 +111,14 @@ function App() {
                   <AdminPanel />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/categories"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CategoryManagement />
+                </ProtectedRoute>
+              }
             />
           </Routes>
         </main>

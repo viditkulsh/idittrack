@@ -16,18 +16,35 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   children,
   fallback = null
 }) => {
-  const { hasPermission, profile } = useAuth()
+  const { hasPermission, profile, user } = useAuth()
   
-  // Fallback for admin and manager when RBAC permissions aren't loaded
-  const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'manager'
+  // Debug logging (remove this after testing)
+  console.log('PermissionGate Debug:', {
+    resource,
+    action,
+    userRole: profile?.role,
+    hasPermission: hasPermission(resource, action),
+    profileExists: !!profile,
+    userExists: !!user
+  })
+
+  // Always allow admin and manager users for basic operations
+  const isAdmin = profile?.role === 'admin'
+  const isManager = profile?.role === 'manager'
+  const isBasicOperation = ['create', 'read', 'update', 'delete'].includes(action)
   
-  // If user has explicit permission, show content
+  // First check: explicit permission
   if (hasPermission(resource, action)) {
     return <>{children}</>
   }
   
-  // Fallback: Allow admin/manager for basic CRUD operations if no permissions are loaded
-  if (isAdminOrManager && ['create', 'read', 'update', 'delete'].includes(action)) {
+  // Second check: admin gets everything
+  if (isAdmin) {
+    return <>{children}</>
+  }
+
+  // Third check: manager gets basic CRUD operations
+  if (isManager && isBasicOperation) {
     return <>{children}</>
   }
   

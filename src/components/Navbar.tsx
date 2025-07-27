@@ -50,7 +50,10 @@ const Navbar = () => {
       { name: 'Orders', href: '/orders', icon: ShoppingCart },
       { name: 'Upload', href: '/upload', icon: Upload },
       // Admin Panel - visible for admins only
-      ...(isAdmin() ? [{ name: 'Admin Panel', href: '/admin', icon: Crown }] : [])
+      ...(isAdmin() ? [
+        { name: 'Admin Panel', href: '/admin', icon: Crown },
+        { name: 'Categories', href: '/categories', icon: Settings }
+      ] : [])
     ] : [])
   ];
 

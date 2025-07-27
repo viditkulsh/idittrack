@@ -1,9 +1,0 @@
-email,first_name,last_name,company_name,role,department,is_active,created_date
-admin@idittrack.com,John,Admin,"IditTrack Corp",admin,IT,true,2025-01-01
-manager@idittrack.com,Jane,Manager,"IditTrack Corp",manager,Operations,true,2025-01-02
-user@idittrack.com,Mike,User,"IditTrack Corp",user,Sales,true,2025-01-03
-inventory.manager@idittrack.com,Sarah,Johnson,"IditTrack Corp",manager,Inventory,true,2025-01-04
-sales.rep@idittrack.com,David,Brown,"IditTrack Corp",user,Sales,true,2025-01-05
-warehouse.supervisor@idittrack.com,Lisa,Garcia,"IditTrack Corp",manager,Warehouse,true,2025-01-06
-data.analyst@idittrack.com,Robert,Miller,"IditTrack Corp",user,Analytics,true,2025-01-07
-procurement@idittrack.com,Amanda,Davis,"IditTrack Corp",manager,Procurement,true,2025-01-08

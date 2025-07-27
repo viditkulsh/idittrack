@@ -3,7 +3,7 @@ import { ShoppingCart, Plus, Search, Filter, Eye, Truck, CheckCircle, X, AlertCi
 import { useOrders } from '../hooks/useOrders';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../contexts/AuthContext';
-import { PermissionGate } from '../components/PermissionGate';
+import { PermissionGate, RoleGate } from '../components/PermissionGate';
 
 interface Order {
   id: string;
@@ -175,7 +175,7 @@ const Orders = () => {
           </h1>
           <p className="text-gray-600 mt-2">Track and manage your orders</p>
         </div>
-        <PermissionGate resource="orders" action="create">
+        <RoleGate roles={['admin', 'manager']}>
           <button
             onClick={handleCreateOrder}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
@@ -183,7 +183,7 @@ const Orders = () => {
             <Plus className="h-5 w-5 mr-2" />
             Create Order
           </button>
-        </PermissionGate>
+        </RoleGate>
       </div>
 
       {/* Filters */}

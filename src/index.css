@@ -68,6 +68,7 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 /* Enhanced animations for admin panel */
 @keyframes fadeInUp {
   from {
@@ -93,18 +94,52 @@
   }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes pulse {
 
   0%,
   100% {
     opacity: 1;
   }
-
   50% {
-    opacity: .8;
+    opacity: 0.8;
   }
 }
 
+/* Animation utility classes */
 .animate-fade-in-up {
   animation: fadeInUp 0.5s ease-out;
 }
@@ -113,6 +148,17 @@
   animation: slideInLeft 0.4s ease-out;
 }
 
+.animate-slide-down {
+  animation: slideDown 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
 .animate-pulse-slow {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

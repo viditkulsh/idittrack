@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { processProductsCSV, processInventoryCSV, processOrdersCSV, detectCSVType } from '../utils/csvProcessor'
 
 export interface UploadedFile {
   id: string
@@ -168,22 +169,84 @@ export const useUploads = () => {
         .from('file-uploads')
         .getPublicUrl(filePath)
 
-      // Update record with success status and URL
-      const { error: updateError } = await supabase
-        .from('file_uploads')
-        .update({ 
-          status: 'completed',
-          url: urlData.publicUrl,
-          file_path: storageData.path
-        })
-        .eq('id', fileId)
+      // Process CSV files automatically
+      let processingResult = null;
+      if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
+        try {
+          // Update status to processing
+          await supabase
+            .from('file_uploads')
+            .update({ status: 'processing' })
+            .eq('id', fileId)
 
-      if (updateError) {
-        console.error('Update error:', updateError)
-        throw updateError
+          // Read file content for processing
+          const csvContent = await readFileAsText(file)
+          const csvType = detectCSVType(csvContent)
+
+          if (csvType !== 'unknown') {
+            let result;
+            switch (csvType) {
+              case 'products':
+                result = await processProductsCSV(csvContent)
+                break
+              case 'inventory':
+                result = await processInventoryCSV(csvContent)
+                break
+              case 'orders':
+                result = await processOrdersCSV(csvContent, user?.id || '')
+                break
+            }
+
+            processingResult = result
+
+            // Update metadata with processing result
+            const updatedMetadata = {
+              ...fileRecord.metadata,
+              csvType,
+              processingResult: result,
+              processedAt: new Date().toISOString()
+            }
+
+            await supabase
+              .from('file_uploads')
+              .update({
+                metadata: updatedMetadata,
+                status: result?.success ? 'completed' : 'failed'
+              })
+              .eq('id', fileId)
+          }
+        } catch (csvError: any) {
+          console.error('CSV processing error:', csvError)
+          // Update metadata with error info
+          await supabase
+            .from('file_uploads')
+            .update({
+              metadata: {
+                ...fileRecord.metadata,
+                processingError: csvError.message,
+                processedAt: new Date().toISOString()
+              },
+              status: 'failed'
+            })
+            .eq('id', fileId)
+        }
+      } else {
+        // Update record with success status and URL for non-CSV files
+        await supabase
+          .from('file_uploads')
+          .update({
+            status: 'completed',
+            url: urlData.publicUrl,
+            file_path: storageData.path
+          })
+          .eq('id', fileId)
       }
 
-      return { success: true, data: uploadRecord }
+      return {
+        success: true,
+        data: uploadRecord,
+        processingResult 
+      }
     } catch (err: any) {
       console.error('Upload error:', err)
       setError(err.message || 'Upload failed')
@@ -343,4 +406,20 @@ export const useUploads = () => {
     generateTemplate,
     refetch: fetchUploads
   }
+}
+
+// Helper function to read file as text
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        resolve(e.target.result as string)
+      } else {
+        reject(new Error('Failed to read file'))
+      }
+    }
+    reader.onerror = () => reject(new Error('Error reading file'))
+    reader.readAsText(file)
+  })
 }

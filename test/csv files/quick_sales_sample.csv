@@ -1,0 +1,6 @@
+customer_name,customer_email,product_sku,quantity,unit_price,status,notes
+John Smith,john.smith@email.com,PROD001,2,150.00,delivered,Repeat customer - VIP
+Sarah Johnson,sarah.j@company.com,PROD002,1,299.99,processing,Corporate bulk discount
+Mike Wilson,mike.wilson@gmail.com,PROD003,3,89.99,shipped,Express shipping
+Lisa Brown,lisa.brown@business.org,PROD001,1,175.00,pending,Premium package
+David Lee,david.lee@startup.io,PROD004,5,45.00,delivered,Startup discount applied

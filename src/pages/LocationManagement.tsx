@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MapPin, Plus, Edit, Building, Search, AlertCircle } from 'lucide-react'
+import { MapPin, Plus, Edit, Building, Search, AlertCircle, Trash2 } from 'lucide-react'
 import { useLocations } from '../hooks/useDatabase'
 import { useAuth } from '../contexts/AuthContext'
 import { PermissionGate } from '../components/PermissionGate'
@@ -16,7 +16,7 @@ interface Location {
 
 const LocationManagement = () => {
   const { user } = useAuth()
-  const { locations, loading, error, addLocation } = useLocations()
+  const { locations, loading, error, addLocation, updateLocation, deleteLocation } = useLocations()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -103,13 +103,23 @@ const LocationManagement = () => {
     e.preventDefault()
     
     try {
-      const { error } = await addLocation({
-        ...formData,
-        is_active: true
-      })
+      let result
+      if (showEditModal && selectedLocation) {
+        // Update existing location
+        result = await updateLocation(selectedLocation.id, {
+          ...formData,
+          is_active: true
+        })
+      } else {
+        // Add new location
+        result = await addLocation({
+          ...formData,
+          is_active: true
+        })
+      }
 
-      if (error) {
-        alert('Error saving location: ' + error)
+      if (result.error) {
+        alert('Error saving location: ' + result.error)
       } else {
         setShowAddModal(false)
         setShowEditModal(false)
@@ -118,6 +128,19 @@ const LocationManagement = () => {
       }
     } catch (error) {
       console.error('Error saving location:', error)
+    }
+  }
+
+  const handleDelete = async (location: Location) => {
+    if (window.confirm(`Are you sure you want to deactivate "${location.name}"? You can reactivate it later from the location list.`)) {
+      try {
+        const result = await deleteLocation(location.id)
+        if (result.error) {
+          alert('Error deleting location: ' + result.error)
+        }
+      } catch (error) {
+        console.error('Error deleting location:', error)
+      }
     }
   }
 
@@ -243,6 +266,15 @@ const LocationManagement = () => {
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate resource="locations" action="delete">
+                    <button
+                      onClick={() => handleDelete(location)}
+                      className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
                     </button>
                   </PermissionGate>
                 </div>

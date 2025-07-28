@@ -215,11 +215,62 @@ export const useLocations = () => {
     }
   }
 
+  const updateLocation = async (id: string, locationData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('locations')
+        .update(locationData)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      await fetchLocations() // Refresh the list
+      return { data, error: null }
+    } catch (err: any) {
+      return { data: null, error: err.message }
+    }
+  }
+
+  const deleteLocation = async (id: string) => {
+    try {
+      // Check if location is used by any inventory
+      const { data: inventory, error: inventoryError } = await supabase
+        .from('inventory')
+        .select('id')
+        .eq('location_id', id)
+
+      if (inventoryError) throw inventoryError
+
+      if (inventory && inventory.length > 0) {
+        throw new Error('Cannot delete location that has inventory. Please move inventory to another location first.')
+      }
+
+      // Soft delete: set is_active to false instead of removing the record.
+      // Note: fetchLocations only returns locations where is_active is true,
+      // so 'deleted' locations will not appear in the list but remain in the database.
+      const { error } = await supabase
+        .from('locations')
+        .update({ is_active: false })
+        .eq('id', id)
+
+      if (error) throw error
+
+      await fetchLocations() // Refresh the list
+      return { data: null, error: null }
+    } catch (err: any) {
+      return { data: null, error: err.message }
+    }
+  }
+
   return { 
     locations, 
     loading, 
     error, 
-    addLocation, 
+    addLocation,
+    updateLocation,
+    deleteLocation,
     refetch: fetchLocations 
   }
 }

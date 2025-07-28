@@ -16,7 +16,8 @@ import {
   ChevronDown,
   UserCircle,
   Crown,
-  Warehouse
+  Warehouse,
+  MapPin
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -34,13 +35,16 @@ type AuthLink = NavLink & {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut, signOutLoading } = useAuth();
   const { isAdmin } = usePermissions();
   const profileRef = useRef<HTMLDivElement>(null);
+  const adminRef = useRef<HTMLDivElement>(null);
 
-  const navigation = [
+  // Core navigation - most used features first
+  const coreNavigation = [
     // Only show Home for non-authenticated users
     ...(user ? [] : [{ name: 'Home', href: '/', icon: Home }]),
     ...(user ? [
@@ -48,13 +52,15 @@ const Navbar = () => {
       { name: 'Products', href: '/products', icon: Package },
       { name: 'Inventory', href: '/inventory', icon: Warehouse },
       { name: 'Orders', href: '/orders', icon: ShoppingCart },
-      { name: 'Upload', href: '/upload', icon: Upload },
-      // Admin Panel - visible for admins only
-      ...(isAdmin() ? [
-        { name: 'Admin Panel', href: '/admin', icon: Crown },
-        { name: 'Categories', href: '/categories', icon: Settings }
-      ] : [])
     ] : [])
+  ];
+
+  // Admin tools - grouped in dropdown for cleaner UI
+  const adminTools = [
+    { name: 'Admin Panel', href: '/admin', icon: Crown },
+    { name: 'Categories', href: '/categories', icon: Settings },
+    { name: 'Locations', href: '/locations', icon: MapPin },
+    { name: 'Upload Data', href: '/upload', icon: Upload },
   ];
 
   const authLinks: AuthLink[] = user ? [] : [
@@ -62,11 +68,14 @@ const Navbar = () => {
     { name: 'Register', href: '/register', icon: UserPlus },
   ];
 
-  // Close profile dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
+      }
+      if (adminRef.current && !adminRef.current.contains(event.target as Node)) {
+        setIsAdminOpen(false);
       }
     };
 
@@ -111,7 +120,8 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
-            {navigation.map((item) => {
+            {/* Core Navigation Links */}
+            {coreNavigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -126,6 +136,44 @@ const Navbar = () => {
                 </Link>
               );
             })}
+
+            {/* Admin Tools Dropdown */}
+            {user && isAdmin() && (
+              <div className="relative" ref={adminRef}>
+                <button
+                  onClick={() => setIsAdminOpen(!isAdminOpen)}
+                  className={`nav-link flex items-center space-x-1 ${adminTools.some(tool => isActive(tool.href)) ? 'nav-link-active' : ''
+                    }`}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Admin</span>
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isAdminOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Admin Dropdown Menu */}
+                {isAdminOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 animate-slide-up">
+                    {adminTools.map((tool) => {
+                      const Icon = tool.icon;
+                      return (
+                        <Link
+                          key={tool.name}
+                          to={tool.href}
+                          onClick={() => setIsAdminOpen(false)}
+                          className={`flex items-center w-full px-4 py-2 text-sm transition-colors duration-200 ${isActive(tool.href)
+                              ? 'bg-blue-50 text-blue-600 font-medium'
+                              : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                        >
+                          <Icon className="h-4 w-4 mr-3" />
+                          {tool.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Auth Links & Profile - Desktop */}
@@ -257,7 +305,8 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden animate-slide-up">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200 shadow-lg">
-            {navigation.map((item) => {
+            {/* Core Navigation */}
+            {coreNavigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -273,6 +322,30 @@ const Navbar = () => {
                 </Link>
               );
             })}
+
+            {/* Admin Tools Section for Mobile */}
+            {user && isAdmin() && (
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Admin Tools
+                </div>
+                {adminTools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <Link
+                      key={tool.name}
+                      to={tool.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`nav-link flex items-center space-x-2 w-full ${isActive(tool.href) ? 'nav-link-active' : ''
+                        }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{tool.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
             
             {/* Mobile Auth Section */}
             <div className="border-t border-gray-200 pt-2">

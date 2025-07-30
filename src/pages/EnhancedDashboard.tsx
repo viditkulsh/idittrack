@@ -14,7 +14,8 @@ import {
   Award,
   AlertCircle,
   CheckCircle,
-  Eye
+    Eye,
+    Printer
 } from 'lucide-react';
 import { 
   Line, 
@@ -34,6 +35,7 @@ import {
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboardAnalytics } from '../hooks/useDashboardAnalytics';
+import { PrintableAnalyticsReport } from '../components/PrintableAnalyticsReport';
 
 // Chart colors for consistent theming
 const CHART_COLORS = {
@@ -65,6 +67,7 @@ const formatPercentage = (value: number) => {
 const EnhancedDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+    const [showPrintReport, setShowPrintReport] = useState(false);
   const { user, profile } = useAuth();
   const { analytics, loading: analyticsLoading, error: analyticsError, refetch } = useDashboardAnalytics();
 
@@ -75,7 +78,18 @@ const EnhancedDashboard = () => {
     setTimeout(() => setIsRefreshing(false), 1000); // Add a small delay for UX
   };
 
-  useEffect(() => {
+    const handlePrintReport = () => {
+        setShowPrintReport(true);
+        // Remove automatic printing - let user decide when to print
+    };
+
+    const handleActualPrint = () => {
+        window.print();
+    };
+
+    const handleClosePrintReport = () => {
+        setShowPrintReport(false);
+    }; useEffect(() => {
     // Set loading based on analytics loading
     setIsLoading(analyticsLoading);
   }, [analyticsLoading]);
@@ -122,6 +136,13 @@ const EnhancedDashboard = () => {
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-3">
               <button
+                              onClick={handlePrintReport}
+                              className="btn-primary flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                          >
+                              <Eye className="h-4 w-4" />
+                              <span>View Report</span>
+                          </button>
+                          <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
                 className={`btn-secondary flex items-center space-x-2 ${isRefreshing ? 'opacity-75 cursor-not-allowed' : 'hover:bg-gray-100'}`}
@@ -1167,6 +1188,58 @@ const EnhancedDashboard = () => {
         </div>
 
       </div>
+
+          {/* Detailed Business Intelligence Report View */}
+          {showPrintReport && (
+              <div className="fixed inset-0 z-50 bg-white overflow-auto">
+                  {/* Report Controls Header */}
+                  <div className="no-print sticky top-0 z-60 bg-white border-b shadow-sm">
+                      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                              <h2 className="text-xl font-bold text-gray-900">📊 Comprehensive Business Intelligence Report</h2>
+                              <span className="text-sm text-gray-500">
+                                  Generated on {new Date().toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric',
+                                      weekday: 'long'
+                                  })}
+                              </span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                              <button
+                                  onClick={handleActualPrint}
+                                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                              >
+                                  <Printer className="h-4 w-4" />
+                                  <span>Print Report</span>
+                              </button>
+                              <button
+                                  onClick={handleClosePrintReport}
+                                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                              >
+                                  <span>Close</span>
+                                  <span className="text-lg">×</span>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Report Content */}
+                  <div className="max-w-7xl mx-auto">
+                      <PrintableAnalyticsReport
+                          analytics={analytics}
+                          companyName="IditTrack Analytics"
+                          reportDate={new Date().toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              weekday: 'long'
+                          })}
+                      />
+                  </div>
+              </div>
+          )}
     </div>
   );
 };

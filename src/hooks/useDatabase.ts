@@ -1,7 +1,47 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+
+// Utility function to generate a URL-friendly slug from a name
+const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+}
+
+// Function to ensure slug uniqueness
+const ensureUniqueSlug = async (baseSlug: string, excludeId?: string): Promise<string> => {
+  let slug = baseSlug
+  let counter = 1
+
+  while (true) {
+    let query = supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', slug)
+      .limit(1)
+
+    if (excludeId) {
+      query = query.neq('id', excludeId)
+    }
+
+    const { data } = await query
+
+    if (!data || data.length === 0) {
+      return slug
+    }
+
+    slug = `${baseSlug}-${counter}`
+    counter++
+  }
+}
 
 export const useCategories = () => {
+  const { user, profile } = useAuth()
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,9 +69,24 @@ export const useCategories = () => {
 
   const addCategory = async (categoryData: any) => {
     try {
+      // Convert empty string parent_id to null for UUID field
+      const processedData = {
+        ...categoryData,
+        parent_id: categoryData.parent_id === '' ? null : categoryData.parent_id,
+        created_by: user?.id || null,
+        tenant_id: profile?.tenant_id || null
+      }
+
+      // Generate a unique slug from the category name
+      const baseSlug = generateSlug(processedData.name)
+      const uniqueSlug = await ensureUniqueSlug(baseSlug)
+
+      // Add the generated slug to the data
+      processedData.slug = uniqueSlug
+
       const { data, error } = await supabase
         .from('categories')
-        .insert([categoryData])
+        .insert([processedData])
         .select()
         .single()
 
@@ -46,9 +101,22 @@ export const useCategories = () => {
 
   const updateCategory = async (id: string, categoryData: any) => {
     try {
+      // Convert empty string parent_id to null for UUID field
+      const processedData = {
+        ...categoryData,
+        parent_id: categoryData.parent_id === '' ? null : categoryData.parent_id
+      }
+
+      // If the name is being updated, regenerate the slug
+      if (processedData.name) {
+        const baseSlug = generateSlug(processedData.name)
+        const uniqueSlug = await ensureUniqueSlug(baseSlug, id)
+        processedData.slug = uniqueSlug
+      }
+
       const { data, error } = await supabase
         .from('categories')
-        .update(categoryData)
+        .update(processedData)
         .eq('id', id)
         .select()
         .single()

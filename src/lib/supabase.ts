@@ -207,19 +207,35 @@ export type Database = {
           id: string
           name: string
           description: string | null
+          slug: string
           parent_id: string | null
+          sort_order: number
+          is_active: boolean
+          image_url: string | null
+          created_by: string | null
           created_at: string
           updated_at: string
+          tenant_id: string | null
         }
         Insert: {
           name: string
           description?: string | null
+          slug: string
           parent_id?: string | null
+          sort_order?: number
+          is_active?: boolean
+          image_url?: string | null
+          created_by?: string | null
+          tenant_id?: string | null
         }
         Update: {
           name?: string
           description?: string | null
+          slug?: string
           parent_id?: string | null
+          sort_order?: number
+          is_active?: boolean
+          image_url?: string | null
         }
       }
       orders: {

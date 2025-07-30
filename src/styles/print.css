@@ -1,0 +1,230 @@
+/* Print-specific styles for the Analytics Report */
+@media print {
+  /* Reset and base styles */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Arial', sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    color: #000000 !important;
+    background: white !important;
+  }
+
+  /* Hide elements that shouldn't print */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always !important;
+  }
+
+  .page-break-after {
+    page-break-after: always !important;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure proper sizing */
+  .print-report {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 15mm !important;
+    max-width: none !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  /* Header styles */
+  .header-section {
+    border-bottom: 2px solid #3B82F6 !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 15px !important;
+  }
+
+  /* Section titles */
+  .section-title {
+    background: #F3F4F6 !important;
+    padding: 8px 12px !important;
+    border-left: 3px solid #3B82F6 !important;
+    margin: 15px 0 10px 0 !important;
+    font-weight: bold !important;
+    font-size: 14px !important;
+    color: #1F2937 !important;
+  }
+
+  /* Tables */
+  .table-style {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 10px 0 !important;
+    font-size: 10px !important;
+  }
+
+  .table-style th,
+  .table-style td {
+    border: 1px solid #D1D5DB !important;
+    padding: 6px 8px !important;
+    text-align: left !important;
+    vertical-align: top !important;
+  }
+
+  .table-style th {
+    background: #F9FAFB !important;
+    font-weight: bold !important;
+    color: #374151 !important;
+  }
+
+  /* Metric cards */
+  .metric-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    margin: 10px 0 !important;
+  }
+
+  .metric-card {
+    border: 1px solid #E5E7EB !important;
+    padding: 10px !important;
+    border-radius: 4px !important;
+    background: #FAFAFA !important;
+    text-align: center !important;
+  }
+
+  .metric-value {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: #1F2937 !important;
+    margin-bottom: 3px !important;
+  }
+
+  .metric-label {
+    font-size: 9px !important;
+    color: #6B7280 !important;
+  }
+
+  /* Classifications */
+  .classification-a {
+    background: #FEF2F2 !important;
+    color: #B91C1C !important;
+  }
+
+  .classification-b {
+    background: #FFFBEB !important;
+    color: #D97706 !important;
+  }
+
+  .classification-c {
+    background: #F0FDF4 !important;
+    color: #166534 !important;
+  }
+
+  .vital {
+    background: #FEF2F2 !important;
+    color: #B91C1C !important;
+  }
+
+  .essential {
+    background: #FFFBEB !important;
+    color: #D97706 !important;
+  }
+
+  .desirable {
+    background: #F0FDF4 !important;
+    color: #166534 !important;
+  }
+
+  /* Ensure content doesn't get cut off */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    margin-top: 0 !important;
+  }
+
+  /* Images and charts - placeholder for future enhancements */
+  .chart-container {
+    height: 200px !important;
+    background: #F9FAFB !important;
+    border: 1px solid #E5E7EB !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 10px 0 !important;
+  }
+
+  /* Footer */
+  .print-footer {
+    position: fixed !important;
+    bottom: 10mm !important;
+    left: 15mm !important;
+    right: 15mm !important;
+    text-align: center !important;
+    font-size: 8px !important;
+    color: #6B7280 !important;
+    border-top: 1px solid #E5E7EB !important;
+    padding-top: 5px !important;
+  }
+
+  /* Two-column layouts */
+  .two-column {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 15px !important;
+    margin: 10px 0 !important;
+  }
+
+  /* Three-column layouts */
+  .three-column {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 10px !important;
+    margin: 10px 0 !important;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 5px 0 !important;
+    padding-left: 15px !important;
+  }
+
+  li {
+    margin: 2px 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Conclusion box */
+  .conclusion-box {
+    background: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    padding: 15px !important;
+    margin: 15px 0 !important;
+    border-radius: 6px !important;
+  }
+
+  /* Responsive adjustments for smaller print areas */
+  @page {
+    margin: 15mm !important;
+    size: A4 !important;
+  }
+}
+
+/* Screen-only styles for print preview */
+@media screen {
+  .print-preview {
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    padding: 40px;
+    max-width: 210mm; /* A4 width */
+    min-height: 297mm; /* A4 height */
+  }
+}

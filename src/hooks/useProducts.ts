@@ -43,10 +43,16 @@ export const useProducts = () => {
       // Separate product data from inventory data
       const { quantity, reorder_point, ...productFields } = productData;
       
+      // Convert empty string category_id to null for UUID field
+      const processedProductFields = {
+        ...productFields,
+        category_id: productFields.category_id === '' ? null : productFields.category_id
+      }
+
       // Create product first
       const { data: product, error: productError } = await supabase
         .from('products')
-        .insert([productFields])
+        .insert([processedProductFields])
         .select()
         .single()
 
@@ -80,10 +86,16 @@ export const useProducts = () => {
       // Separate product data from inventory data
       const { quantity, reorder_point, ...productFields } = productData;
       
+      // Convert empty string category_id to null for UUID field
+      const processedProductFields = {
+        ...productFields,
+        category_id: productFields.category_id === '' ? null : productFields.category_id
+      }
+
       // Update product
       const { data: product, error: productError } = await supabase
         .from('products')
-        .update(productFields)
+        .update(processedProductFields)
         .eq('id', id)
         .select()
         .single()

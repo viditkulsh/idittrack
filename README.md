@@ -235,7 +235,7 @@ await createOrder({
 
 ## 🎯 Roadmap
 
-<div align="center">
+<!-- <div align="center">
 
 ```mermaid
 gantt
@@ -252,7 +252,7 @@ gantt
     API Marketplace   :phase5, 2025-01-01, 2025-03-31
 ```
 
-</div>
+</div> -->
 
 ### 🎯 Current Status: ✅ **Production Ready**
 
